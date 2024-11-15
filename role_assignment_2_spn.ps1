@@ -1,3 +1,4 @@
+
 # List of role IDs
 $roleIds = @(
     "e0f68234-74aa-48ed-b826-c38b57376e17", # Redis Cache Contributor
@@ -20,11 +21,36 @@ $roleIds = @(
     "acdd72a7-3385-48ef-bd42-f606fba81ae7"  # Reader
 )
 
+# Initialize the JSON structure
+$json = @{
+    properties = @{
+        roleName = ""
+        description = ""
+        assignableScopes = @("/subscriptions/015ab1e4-bd82-4c0d-ada9-0f9e9c68e0c4")
+        permissions = @(@{
+            actions = @()
+            notActions = @()
+            dataActions = @()
+            notDataActions = @()
+        })
+    }
+}
+
 # Loop through each role ID and get the actions
 foreach ($roleId in $roleIds) {
     $role = Get-AzRoleDefinition -Id $roleId
+    
+    # Add actions to the JSON structure
+    $json.properties.permissions[0].actions += $role.Actions
+    
     Write-Output "Role: $($role.Name)"
     Write-Output "Actions:"
     $role.Actions | ForEach-Object { Write-Output "  $_" }
     Write-Output ""
 }
+
+# Convert JSON structure to JSON string and save to file
+$jsonString = $json | ConvertTo-Json -Depth 10
+Set-Content -Path "roles_with_actions.json" -Value $jsonString
+
+Write-Output "The JSON file 'roles_with_actions.json' has been created with the actions filled in."
